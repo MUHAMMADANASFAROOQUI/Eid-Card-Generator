@@ -1,3 +1,4 @@
 react
 react-dom
 html2canvas
+windows
