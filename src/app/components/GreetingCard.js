@@ -1,49 +1,51 @@
-import React, { useRef, useState, useEffect } from "react";
-import html2canvas from "html2canvas"; // Import the html2canvas library
+import { useEffect, useState, useRef } from "react";
+import html2canvas from "html2canvas";
 
 const GreetingCard = ({ name, recipient, message, selectedBackground }) => {
-  const cardRef = useRef(null); // Create a reference for the card
+  const [isClient, setIsClient] = useState(false); // Track if we are on the client side
+  const cardRef = useRef(null);
 
-  // State to track the background image URL
-  const [background, setBackground] = useState(selectedBackground);
-
+  // Only run the code on the client side after component mounts
   useEffect(() => {
-    // Update background state when selectedBackground prop changes
-    setBackground(selectedBackground);
-  }, [selectedBackground]);
+    setIsClient(true); // Set to true after the component mounts
+  }, []);
 
-  // Function to handle downloading the card
   const handleDownload = () => {
-    html2canvas(cardRef.current, {
-      allowTaint: true, // Allow background images to be captured even if they are from a different origin
-      useCORS: true, // Use CORS to ensure cross-origin images are captured correctly
-    })
-      .then((canvas) => {
-        const link = document.createElement("a");
-        link.href = canvas.toDataURL(); // Convert the canvas to a data URL
-        link.download = "greeting_card.png"; // Set the default file name for download
-        link.click(); // Trigger the download
+    if (isClient && cardRef.current) { // Ensure code runs only on client side
+      html2canvas(cardRef.current, {
+        allowTaint: true,
+        useCORS: true,
       })
-      .catch((error) => {
-        console.error("Error generating greeting card:", error);
-        alert("An error occurred while generating the greeting card. Please try again.");
-      });
+        .then((canvas) => {
+          const link = document.createElement("a");
+          link.href = canvas.toDataURL();
+          link.download = "greeting_card.png";
+          link.click();
+        })
+        .catch((error) => {
+          console.error("Error generating greeting card:", error);
+          alert("An error occurred while generating the greeting card. Please try again.");
+        });
+    }
   };
+
+  if (!isClient) {
+    return null; // Optionally return null or a loading spinner until mounted
+  }
 
   return (
     <div className="text-center mt-16">
-      {/* Card Content */}
       <div
-        ref={cardRef} // Attach the reference to the card div
+        ref={cardRef}
         className="p-5 shadow-lg rounded-lg text-black bg-cover relative bg-center mx-auto"
         style={{
-          backgroundImage: `url(${selectedBackground})`, // Dynamically set the background image
+          backgroundImage: `url(${selectedBackground})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
-          height: "auto", // Adjust height to accommodate dynamic content
+          height: "400px",
           maxWidth: "750px",
-          width: "100%", // Make the card responsive
+          width: "100%",
         }}
       >
         <h2 className="text-7xl font-bold text-cyan-700 mt-10 font-font1">Happy</h2>
@@ -54,20 +56,16 @@ const GreetingCard = ({ name, recipient, message, selectedBackground }) => {
         <p
           className="italic text-[22px] font-semibold text-cyan-900 mt-4 font-font2 w-2/4 ml-52"
           style={{
-            wordBreak: "break-word", // Ensure long words break into the next line
-            whiteSpace: "normal", // Ensure text wraps naturally
+            wordBreak: "break-word",
+            whiteSpace: "normal",
           }}
         >
           "{message}"
         </p>
       </div>
 
-      {/* Download Button */}
-      <div className="mt-8"> {/* Added margin-top to space the button */}
-        <button
-          onClick={handleDownload}
-          className="bg-indigo-600 text-white p-3 rounded"
-        >
+      <div className="mt-8">
+        <button onClick={handleDownload} className="bg-indigo-600 text-white p-3 rounded">
           Download Greeting Card
         </button>
       </div>
